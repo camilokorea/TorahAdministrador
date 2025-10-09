@@ -1,0 +1,53 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\CODE\\torah\\torah-administrador\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{B31DC528-65EF-44E1-BADA-A753382D7DC4}|torah-administrador\\torah-administrador.esproj|c:\\code\\torah\\torah-administrador\\torah-administrador\\package.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{B31DC528-65EF-44E1-BADA-A753382D7DC4}|torah-administrador\\torah-administrador.esproj|solutionrelative:torah-administrador\\package.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B31DC528-65EF-44E1-BADA-A753382D7DC4}|torah-administrador\\torah-administrador.esproj|c:\\code\\torah\\torah-administrador\\torah-administrador\\torah-administrador.esproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|",
+      "RelativeMoniker": "D:0:0:{B31DC528-65EF-44E1-BADA-A753382D7DC4}|torah-administrador\\torah-administrador.esproj|solutionrelative:torah-administrador\\torah-administrador.esproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "package.json",
+              "DocumentMoniker": "C:\\CODE\\torah\\torah-administrador\\torah-administrador\\package.json",
+              "RelativeDocumentMoniker": "torah-administrador\\package.json",
+              "ToolTip": "C:\\CODE\\torah\\torah-administrador\\torah-administrador\\package.json",
+              "RelativeToolTip": "torah-administrador\\package.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2024-12-29T17:56:39.719Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "torah-administrador",
+              "DocumentMoniker": "C:\\CODE\\torah\\torah-administrador\\torah-administrador\\torah-administrador.esproj",
+              "RelativeDocumentMoniker": "torah-administrador\\torah-administrador.esproj",
+              "ToolTip": "C:\\CODE\\torah\\torah-administrador\\torah-administrador\\torah-administrador.esproj",
+              "RelativeToolTip": "torah-administrador\\torah-administrador.esproj",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2024-12-29T17:56:28.767Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
