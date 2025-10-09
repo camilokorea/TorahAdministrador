@@ -22,35 +22,10 @@ The application is divided into the following main directories:
 *   `src/hooks`: Contains the custom hooks that encapsulate the business logic, such as fetching data from the API and managing the state of the different modules.
 *   `src/router`: Contains the application's routing configuration.
 
-## Getting Started
-
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
-
-### Prerequisites
-
-*   Node.js and npm (or yarn) installed on your machine.
-
-### Installation
-
-1.  Clone the repository:
-    ```sh
-    git clone https://github.com/C-D-P-A/Torah-Administrador.git
-    ```
-2.  Navigate to the project directory:
-    ```sh
-    cd torah-administrador
-    ```
-3.  Install the dependencies:
-    ```sh
-    npm install
-    ```
-
-## Usage
-
-To start the development server, run the following command:
+## Quick Start
 
 ```sh
-npm run dev
+git clone https://github.com/C-D-P-A/Torah-Administrador.git && cd torah-administrador && npm install && npm run dev
 ```
 
 This will start the application in development mode. Open [http://localhost:5173](http://localhost:5173) to view it in the browser.
