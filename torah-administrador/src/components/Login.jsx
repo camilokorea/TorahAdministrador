@@ -20,6 +20,8 @@ const Login = () => {
     password: "",
   });
 
+  const [rememberMe, setRememberMe] = useState(false);
+
   useMemo(() => {
     if (error) {
       toast.error(error, { position: "bottom-right" });
@@ -36,7 +38,7 @@ const Login = () => {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    login(input);
+    login(input, rememberMe);
   };
 
   const handleInput = (e) => {
@@ -45,6 +47,10 @@ const Login = () => {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleRememberMeChange = (e) => {
+    setRememberMe(e.target.checked);
   };
 
   return (
@@ -60,32 +66,40 @@ const Login = () => {
           return (
             <Form onSubmit={handleLogin}>
               <Form.Group className="mb-3" controlId="username">
-                <Form.Label>Username</Form.Label>
+                <Form.Label>Usuario</Form.Label>
                 <Form.Control
                   type="email"
                   name="email"
                   onChange={handleInput}
-                  placeholder="example@yahoo.com"
+                  placeholder="ejemplo@yahoo.com"
                 />
                 <Form.Control.Feedback type="invalid">
-                  Please enter a valid username. It must contain at least 6 characters.
+                  Por favor, ingrese un usuario válido. Debe contener al menos 6 caracteres.
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group className="mb-3" controlId="password">
-                <Form.Label>Password</Form.Label>
+                <Form.Label>Contraseña</Form.Label>
                 <Form.Control
                   type="password"
                   name="password"
                   onChange={handleInput}
-                  placeholder="Enter your password"
+                  placeholder="Ingrese su contraseña"
                 />
                 <Form.Control.Feedback type="invalid">
-                  your password should be more than 6 character
+                  La contraseña debe tener más de 6 caracteres
                 </Form.Control.Feedback>
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="rememberMe">
+                <Form.Check
+                  type="checkbox"
+                  label="Recordar sesión"
+                  checked={rememberMe}
+                  onChange={handleRememberMeChange}
+                />
               </Form.Group>
               <div className="d-grid">
                 <Button variant="primary" type="submit">
-                  Login
+                  Iniciar sesión
                 </Button>
               </div>
             </Form>

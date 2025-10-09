@@ -8,17 +8,38 @@ export const AuthProvider = ({ children }) => {
     const API_URL = 'https://bibliaapi.comunidadmenorah.com/api/Auth/';
     // const API_URL = 'https://localhost:7116/api/Auth/';
 
-    const [token, setToken] = useState(sessionStorage.getItem("token") || "");
+    // Verificar tanto localStorage como sessionStorage para la inicialización
+    const getStoredValue = (key) => {
+        try {
+            return localStorage.getItem(key) || sessionStorage.getItem(key) || "";
+        } catch (error) {
+            console.warn(`Error accessing storage for key ${key}:`, error);
+            return "";
+        }
+    };
+
+    const [token, setToken] = useState(getStoredValue("token"));
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [user, setUser] = useState(sessionStorage.getItem("user") || "");
-    const [isAuthenticated, setIsAuthenticated] = useState(JSON.parse(sessionStorage.getItem('isAuthenticated')) || false);
+    const [user, setUser] = useState(getStoredValue("username"));
+    const [isAuthenticated, setIsAuthenticated] = useState(() => {
+        const storedValue = getStoredValue('isAuthenticated');
+        if (!storedValue || storedValue === '') {
+            return false;
+        }
+        try {
+            return JSON.parse(storedValue);
+        } catch (error) {
+            console.warn('Error parsing isAuthenticated from storage:', error);
+            return false;
+        }
+    });
 
     const {
         codigosHttp
     } = UseHttpCodes();
 
-    const login = async (userData) => {
+    const login = async (userData, rememberMe = false) => {
         setLoading(true);
         setError(null);
         try {
@@ -41,9 +62,17 @@ export const AuthProvider = ({ children }) => {
                 setUser(userData.email);
                 setIsAuthenticated(true);
 
-                sessionStorage.setItem("token", data.token);
-                sessionStorage.setItem("username", userData.email);
-                sessionStorage.setItem("isAuthenticated", "true");
+                // Usar localStorage si "Recordar sesión" está marcado, sino sessionStorage
+                try {
+                    const storage = rememberMe ? localStorage : sessionStorage;
+                    storage.setItem("token", data.token);
+                    storage.setItem("username", userData.email);
+                    storage.setItem("isAuthenticated", "true");
+                    storage.setItem("rememberMe", rememberMe.toString());
+                } catch (error) {
+                    console.warn('Error saving to storage:', error);
+                    // Continuar con el login aunque falle el storage
+                }
             }
         } catch (err) {
             setToken(null);
@@ -60,9 +89,20 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setIsAuthenticated(false);
 
-        sessionStorage.removeItem("token");
-        sessionStorage.removeItem("username");
-        sessionStorage.removeItem("isAuthenticated");
+        // Limpiar tanto localStorage como sessionStorage
+        try {
+            sessionStorage.removeItem("token");
+            sessionStorage.removeItem("username");
+            sessionStorage.removeItem("isAuthenticated");
+            sessionStorage.removeItem("rememberMe");
+            
+            localStorage.removeItem("token");
+            localStorage.removeItem("username");
+            localStorage.removeItem("isAuthenticated");
+            localStorage.removeItem("rememberMe");
+        } catch (error) {
+            console.warn('Error clearing storage:', error);
+        }
     };
 
     return (

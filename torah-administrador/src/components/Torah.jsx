@@ -66,7 +66,7 @@ const Torah = () => {
                                                                     <td>{libro.abreviacion}</td>
                                                                     <td>{libro.testamento}</td>
                                                                 </tr>
-                                                            ) : <div></div>
+                                                            ) : null
                                                         ))}
                                                     </tbody>
                                                 </Table>
