@@ -75,6 +75,11 @@ jobs:
           # Clean previous deployment
           sudo rm -rf "${{ secrets.DEPLOY_PATH }}/*"
 
+    - name: Create deployment archive
+      run: |
+        cd torah-administrador/dist
+        tar -czf ../../deployment.tar.gz .
+
     - name: Copy files to server
       uses: appleboy/scp-action@v0.1.7
       with:
@@ -82,10 +87,10 @@ jobs:
         username: ${{ secrets.LINODE_USERNAME }}
         key: ${{ secrets.LINODE_SSH_KEY }}
         port: 22
-        source: "torah-administrador/dist/"
+        source: "deployment.tar.gz"
         target: "${{ secrets.DEPLOY_PATH }}"
 
-    - name: Set permissions and restart services
+    - name: Extract and setup deployment
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.LINODE_HOST }}
@@ -93,6 +98,13 @@ jobs:
         key: ${{ secrets.LINODE_SSH_KEY }}
         port: 22
         script: |
+          # Extract deployment files to the root of deploy path
+          cd "${{ secrets.DEPLOY_PATH }}"
+          tar -xzf deployment.tar.gz
+          
+          # Remove the archive
+          rm deployment.tar.gz
+          
           # Set proper permissions
           sudo chown -R www-data:www-data "${{ secrets.DEPLOY_PATH }}"
           sudo chmod -R 755 "${{ secrets.DEPLOY_PATH }}"
@@ -101,3 +113,5 @@ jobs:
           sudo systemctl reload nginx
           
           echo "✅ Deployment completed successfully!"
+          echo "📁 Files deployed to: ${{ secrets.DEPLOY_PATH }}"
+          ls -la "${{ secrets.DEPLOY_PATH }}"
