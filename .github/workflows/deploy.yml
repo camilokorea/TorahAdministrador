@@ -3,6 +3,21 @@ name: Deploy to Linode Ubuntu Server
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+      force_deploy:
+        description: 'Force deployment even if no changes'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   deploy:
@@ -11,6 +26,15 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Display deployment info
+      run: |
+        echo "🚀 Starting deployment..."
+        echo "Environment: ${{ github.event.inputs.environment || 'production' }}"
+        echo "Force deploy: ${{ github.event.inputs.force_deploy || 'false' }}"
+        echo "Triggered by: ${{ github.event_name }}"
+        echo "Branch: ${{ github.ref_name }}"
+        echo "Commit: ${{ github.sha }}"
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
