@@ -1,0 +1,74 @@
+name: Deploy to Linode Ubuntu Server
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: torah-administrador/package-lock.json
+
+    - name: Install dependencies
+      working-directory: torah-administrador
+      run: npm ci
+
+    - name: Build application
+      working-directory: torah-administrador
+      run: npm run build
+
+    - name: Deploy to Linode server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.LINODE_HOST }}
+        username: ${{ secrets.LINODE_USERNAME }}
+        key: ${{ secrets.LINODE_SSH_KEY }}
+        port: 22
+        script: |
+          # Create backup of current deployment
+          if [ -d "${{ secrets.DEPLOY_PATH }}" ]; then
+            sudo cp -r "${{ secrets.DEPLOY_PATH }}" "${{ secrets.DEPLOY_PATH }}.backup.$(date +%Y%m%d_%H%M%S)"
+          fi
+          
+          # Create deployment directory if it doesn't exist
+          sudo mkdir -p "${{ secrets.DEPLOY_PATH }}"
+          
+          # Clean previous deployment
+          sudo rm -rf "${{ secrets.DEPLOY_PATH }}/*"
+
+    - name: Copy files to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.LINODE_HOST }}
+        username: ${{ secrets.LINODE_USERNAME }}
+        key: ${{ secrets.LINODE_SSH_KEY }}
+        port: 22
+        source: "torah-administrador/dist/*"
+        target: "${{ secrets.DEPLOY_PATH }}"
+
+    - name: Set permissions and restart services
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.LINODE_HOST }}
+        username: ${{ secrets.LINODE_USERNAME }}
+        key: ${{ secrets.LINODE_SSH_KEY }}
+        port: 22
+        script: |
+          # Set proper permissions
+          sudo chown -R www-data:www-data "${{ secrets.DEPLOY_PATH }}"
+          sudo chmod -R 755 "${{ secrets.DEPLOY_PATH }}"
+          
+          # Restart nginx
+          sudo systemctl reload nginx
+          
+          echo "✅ Deployment completed successfully!"
