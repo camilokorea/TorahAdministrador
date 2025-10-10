@@ -27,6 +27,16 @@ jobs:
       working-directory: torah-administrador
       run: npm run build
 
+    - name: Verify build output
+      run: |
+        echo "Checking build output..."
+        ls -la torah-administrador/dist/
+        if [ ! -f "torah-administrador/dist/index.html" ]; then
+          echo "❌ index.html not found in dist/"
+          exit 1
+        fi
+        echo "✅ Build verification successful"
+
     - name: Deploy to Linode server
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -53,7 +63,7 @@ jobs:
         username: ${{ secrets.LINODE_USERNAME }}
         key: ${{ secrets.LINODE_SSH_KEY }}
         port: 22
-        source: "torah-administrador/dist/*"
+        source: "torah-administrador/dist/"
         target: "${{ secrets.DEPLOY_PATH }}"
 
     - name: Set permissions and restart services
