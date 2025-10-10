@@ -45,11 +45,6 @@ jobs:
         key: ${{ secrets.LINODE_SSH_KEY }}
         port: 22
         script: |
-          # Create backup of current deployment
-          if [ -d "${{ secrets.DEPLOY_PATH }}" ]; then
-            sudo cp -r "${{ secrets.DEPLOY_PATH }}" "${{ secrets.DEPLOY_PATH }}.backup.$(date +%Y%m%d_%H%M%S)"
-          fi
-          
           # Create deployment directory if it doesn't exist
           sudo mkdir -p "${{ secrets.DEPLOY_PATH }}"
           
