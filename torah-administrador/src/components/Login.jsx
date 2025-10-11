@@ -98,7 +98,7 @@ const Login = () => {
                 />
               </Form.Group>
               <div className="d-grid">
-                <Button variant="primary" type="submit">
+                <Button variant="success" type="submit">
                   Iniciar sesión
                 </Button>
               </div>

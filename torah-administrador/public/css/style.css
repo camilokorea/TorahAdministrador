@@ -1,0 +1,30 @@
+body {
+    color: antiquewhite !important;
+    height: 100vh;
+}
+
+.bg-biblia {
+    background: linear-gradient(to bottom,
+            #003366 0%,
+            /* azul oscuro */
+            #1e90ff 35%,
+            /* azul medio */
+            #a3cbe9 65%,
+            /* azul muy claro */
+            #9dc0a0 100%
+            /* verde claro suave */
+        );
+    background-repeat: no-repeat;
+    background-size: cover;
+    /* expande para cubrir el contenedor */
+    background-attachment: fixed;
+    /* opcional: mantiene el fondo fijo al hacer scroll */
+    min-height: 100%;
+    /* ocupa toda la altura del contenedor padre */
+    height: 100%;
+    /* se adapta si el padre tiene altura dinámica */
+}
+
+.menu-biblia {
+    background: radial-gradient(ellipse farthest-corner at right bottom, #fedb37 0, #fdb931 8%, #9f7928 30%, #8a6e2f 40%, rgba(0, 0, 0, 0) 80%), radial-gradient(ellipse farthest-corner at left top, #fff 0, #ffffac 8%, #d1b464 25%, #5d4a1f 62.5%, #5d4a1f 100%);
+}
