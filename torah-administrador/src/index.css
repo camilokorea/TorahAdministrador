@@ -1,22 +1,114 @@
-.top-fixed {
-    position: fixed;
-    top: 0px;
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/literata";
+
+/*
+  Paleta Menorah: azul del logo + dorado de la luz de la menorah sobre papel cálido.
+  Cada tema redefine las mismas variables; Tailwind las expone como colores (bg-page, text-ink, ...).
+*/
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-on-brand: var(--on-brand);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-danger: var(--danger);
+
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Literata Variable", "Iowan Old Style", Georgia, "Times New Roman", serif;
 }
 
-.right-absolute {
-    position: absolute;
-    right: 0px;
-    top: 30px;
+:root,
+[data-theme="light"] {
+  --page: #fbf8f2;
+  --surface: #ffffff;
+  --surface-2: #f3eee3;
+  --ink: #1b2333;
+  --muted: #5b6475;
+  --line: #e6dfd0;
+  --brand: #1d4f91;        /* azul del logo */
+  --brand-strong: #0f2d57; /* azul marino de la paloma */
+  --brand-soft: #e6eef8;
+  --on-brand: #ffffff;
+  --gold: #8a6524;         /* números de versículo, acentos (AA sobre papel) */
+  --gold-soft: #f3e6c8;
+  --danger: #b42318;
+  color-scheme: light;
 }
 
-z-index-10 {
-    z-index: 10;
+[data-theme="sepia"] {
+  --page: #f4ecd8;
+  --surface: #fbf5e6;
+  --surface-2: #ebe0c4;
+  --ink: #3a2e1f;
+  --muted: #6c5b43;
+  --line: #ddcfae;
+  --brand: #1d4f91;
+  --brand-strong: #0f2d57;
+  --brand-soft: #e3e3d8;
+  --on-brand: #ffffff;
+  --gold: #835b17;
+  --gold-soft: #ecdcb4;
+  --danger: #a5281b;
+  color-scheme: light;
 }
 
-.hover-text {
-    transition: color 0.3s ease, transform 0.3s ease;
+[data-theme="dark"] {
+  --page: #0d1320;
+  --surface: #151d2c;
+  --surface-2: #1d2738;
+  --ink: #e9e4d8;
+  --muted: #a2a9b6;
+  --line: #2a3446;
+  --brand: #8fb3ea;
+  --brand-strong: #1d4f91;
+  --brand-soft: #1b2a44;
+  --on-brand: #0d1320;
+  --gold: #d9b76c;
+  --gold-soft: #3a3020;
+  --danger: #f1857a;
+  color-scheme: dark;
 }
 
-.hover-text:hover {
-    font-weight: bolder;
+html {
+  background: var(--page);
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tamaño de lectura controlado desde Ajustes (data-size en <html>). */
+:root { --reading-size: 1.1875rem; }
+[data-size="s"] { --reading-size: 1rem; }
+[data-size="m"] { --reading-size: 1.1875rem; }
+[data-size="l"] { --reading-size: 1.375rem; }
+[data-size="xl"] { --reading-size: 1.625rem; }
+
+.reading {
+  font-size: var(--reading-size);
+  line-height: 1.75;
+}
+
+@utility pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+@utility pt-safe { padding-top: env(safe-area-inset-top); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }

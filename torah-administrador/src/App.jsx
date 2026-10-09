@@ -1,38 +1,55 @@
-// src/App.js
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext'; // Importamos el contexto
-import Login from './components/Login';
-import AuthenticatedLayout from './components/AuthenticatedLayout';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import { createBrowserRouter, Navigate, Outlet, RouterProvider, useLocation } from 'react-router-dom';
+import { AuthProvider, useAuth } from './lib/auth';
+import { BooksProvider } from './lib/books';
+import { ToastProvider } from './lib/toast';
+import Layout from './components/Layout';
+import Login from './pages/Login';
+import Books from './pages/Books';
+import Book from './pages/Book';
+import Dedicatoria from './pages/Dedicatoria';
+import Glosario from './pages/Glosario';
+import NotFound from './pages/NotFound';
 
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth(); // Consumimos el estado de autenticación
-
-  return isAuthenticated ? children : <Navigate to="/login" />;
+const RequireAuth = () => {
+    const { isAuthenticated } = useAuth();
+    const location = useLocation();
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
+    }
+    return (
+        <BooksProvider>
+            <Outlet />
+        </BooksProvider>
+    );
 };
 
-const App = () => {
-  return (
+// Router de datos: necesario para avisar de cambios sin guardar al navegar.
+const router = createBrowserRouter([
+    { path: '/login', element: <Login /> },
+    {
+        element: <RequireAuth />,
+        children: [
+            {
+                element: <Layout />,
+                children: [
+                    { index: true, element: <Books /> },
+                    { path: 'libro/:id', element: <Book /> },
+                    { path: 'dedicatoria', element: <Dedicatoria /> },
+                    { path: 'glosario', element: <Glosario /> },
+                    { path: '*', element: <NotFound /> },
+                ],
+            },
+        ],
+    },
+]);
+
+const App = () => (
     <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Ruta de Login */}
-          <Route path="/login" element={<Login />} />
-
-          {/* Rutas protegidas */}
-          <Route
-            path="/*"
-            element={
-              <ProtectedRoute>
-                <AuthenticatedLayout />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </Router>
+        <ToastProvider>
+            <RouterProvider router={router} />
+        </ToastProvider>
     </AuthProvider>
-  );
-};
+);
 
 export default App;
