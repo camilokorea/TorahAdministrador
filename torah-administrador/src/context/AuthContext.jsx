@@ -5,7 +5,7 @@ import { UseHttpCodes } from '../hooks/UseHttpCodes';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const API_URL = 'https://bibliaapi.comunidadmenorah.com/api/Auth/';
+    const API_URL = (import.meta.env.VITE_API_BASE_URL || 'https://bibliaapi.comunidadmenorah.com/api/') + 'Auth/';
     // const API_URL = 'https://localhost:7116/api/Auth/';
 
     // Verificar tanto localStorage como sessionStorage para la inicialización

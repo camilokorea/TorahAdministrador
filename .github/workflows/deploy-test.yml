@@ -1,0 +1,72 @@
+name: Deploy TEST to Linode Ubuntu Server
+
+# Ambiente de pruebas: https://test.bibliaadministrador.ministeriomenorah.com
+# Usa la API de pruebas (https://test.bibliaapi.ministeriomenorah.com): las ediciones NO tocan produccion.
+
+on:
+  push:
+    branches: [ test ]
+  workflow_dispatch:
+
+env:
+  TEST_PATH: /WWW/test.bibliaadministrador.ministeriomenorah.com
+  VITE_API_BASE_URL: https://test.bibliaapi.ministeriomenorah.com/api/
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Clean and install dependencies
+      working-directory: torah-administrador
+      run: |
+        rm -rf node_modules package-lock.json
+        npm install
+
+    - name: Build application
+      working-directory: torah-administrador
+      run: npm run build
+
+    - name: Verify build output
+      run: |
+        test -f torah-administrador/dist/index.html || { echo "❌ index.html not found in dist/"; exit 1; }
+
+    - name: Create deployment archive
+      run: |
+        cd torah-administrador/dist
+        tar -czf ../../deployment.tar.gz .
+
+    - name: Copy files to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.LINODE_HOST }}
+        username: ${{ secrets.LINODE_USERNAME }}
+        key: ${{ secrets.LINODE_SSH_KEY }}
+        port: 22
+        source: "deployment.tar.gz"
+        target: "/tmp/test.bibliaadministrador-deploy"
+
+    - name: Extract and setup deployment
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.LINODE_HOST }}
+        username: ${{ secrets.LINODE_USERNAME }}
+        key: ${{ secrets.LINODE_SSH_KEY }}
+        port: 22
+        script: |
+          set -e
+          sudo mkdir -p "${{ env.TEST_PATH }}"
+          sudo find "${{ env.TEST_PATH }}" -mindepth 1 -delete
+          sudo tar -xzf /tmp/test.bibliaadministrador-deploy/deployment.tar.gz -C "${{ env.TEST_PATH }}"
+          rm -rf /tmp/test.bibliaadministrador-deploy
+          sudo chown -R www-data:www-data "${{ env.TEST_PATH }}"
+          sudo chmod -R 755 "${{ env.TEST_PATH }}"
+          echo "✅ Deployed to ${{ env.TEST_PATH }}"
