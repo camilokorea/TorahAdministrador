@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Info, RefreshCw, TriangleAlert } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Info, ListPlus, Plus, RefreshCw, TriangleAlert } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { displayName, useBooks } from '../lib/books';
@@ -10,6 +10,7 @@ import { confirmDiscard, useUnsavedChanges } from '../lib/useUnsavedChanges';
 import { btn, card } from '../lib/ui';
 import InlineField from '../components/InlineField';
 import VerseRow from '../components/VerseRow';
+import NewVerseRow from '../components/NewVerseRow';
 
 const Book = () => {
     const { id } = useParams();
@@ -26,6 +27,9 @@ const Book = () => {
     const [justSaved, setJustSaved] = useState(null);
     const [nameDirty, setNameDirty] = useState(false);
     const [abbrDirty, setAbbrDirty] = useState(false);
+    const [inserting, setInserting] = useState(null); // { position, number, draft }
+    const [busy, setBusy] = useState(false); // insertar / eliminar / unir en curso
+    const [insertError, setInsertError] = useState('');
 
     const load = useCallback(async () => {
         setLoadError(null);
@@ -41,6 +45,15 @@ const Book = () => {
         load();
     }, [load]);
 
+    // Recarga el libro sin vaciar la pantalla (después de insertar o eliminar cambian las posiciones).
+    const refresh = useCallback(async () => {
+        try {
+            setLibro(await api.getLibro(id));
+        } catch (e) {
+            toast.error(`No se pudo recargar el libro: ${e.message}`);
+        }
+    }, [id, toast]);
+
     const chapters = libro?.capitulos ?? [];
     const requested = Number(params.get('cap'));
     const chapter = chapters.find((c) => c.capituloNumero === requested) ?? chapters[0];
@@ -49,7 +62,7 @@ const Book = () => {
 
     const analysis = useMemo(() => analyzeChapter(chapter?.versiculos), [chapter]);
 
-    const verseDirty = !!editing && editing.draft.trim() !== editing.original.trim();
+    const verseDirty = (!!editing && editing.draft.trim() !== editing.original.trim()) || !!inserting?.draft.trim();
     useUnsavedChanges(verseDirty || nameDirty || abbrDirty);
 
     // Al cambiar de capítulo (por los botones o por "Ir a…") se cierra el editor.
@@ -59,6 +72,7 @@ const Book = () => {
         setEditing(null);
         setSaveError('');
         setJustSaved(null);
+        setInserting(null);
     }, [id, chapterNumber]);
 
     const goToChapter = (number) => setParams({ cap: String(number) });
@@ -67,6 +81,7 @@ const Book = () => {
         if (editing?.index === entry.index) return;
         if (verseDirty && !confirmDiscard()) return;
         setSaveError('');
+        setInserting(null);
         setEditing({ index: entry.index, draft: entry.body, original: entry.body });
     };
 
@@ -101,6 +116,83 @@ const Book = () => {
         }
     };
 
+    const refOf = (number) => `${libro.abreviacion} ${chapter.capituloNumero}${number ? `:${number}` : ''}`;
+
+    // Número sugerido para un versículo nuevo después de la entrada indicada.
+    const numberAfter = (index) => {
+        const previous = analysis.entries.slice(0, index + 1).reverse().find((e) => !e.isFragment);
+        return (previous?.number ?? 0) + 1;
+    };
+
+    // Posición donde va un versículo faltante: antes del primer versículo con número mayor.
+    const positionFor = (number) => {
+        const next = analysis.entries.find((e) => !e.isFragment && e.number > number);
+        return next ? next.index : analysis.entries.length;
+    };
+
+    const startInsert = (position, number) => {
+        if (verseDirty && !confirmDiscard()) return;
+        setEditing(null);
+        setInsertError('');
+        setInserting({ position, number: String(number), draft: '' });
+    };
+
+    const saveInsert = async () => {
+        const number = Number(inserting.number);
+        const text = `${number} ${inserting.draft.trim()}`;
+        setBusy(true);
+        setInsertError('');
+        try {
+            await api.insertVersiculo(token, libro.id, chapter.capituloNumero, inserting.position, text);
+            const position = inserting.position;
+            setInserting(null);
+            await refresh();
+            setJustSaved(position);
+            setTimeout(() => setJustSaved((cur) => (cur === position ? null : cur)), 2500);
+            toast.success(`${refOf(number)} insertado.`);
+        } catch (e) {
+            setInsertError(e.status === 401 ? 'La sesión expiró. Vuelve a entrar y pulsa Insertar otra vez.' : `No se pudo insertar: ${e.message}`);
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const deleteEntry = async (entry) => {
+        const what = entry.isFragment ? `este fragmento de ${refOf()}` : `el versículo ${refOf(entry.number)}`;
+        const preview = entry.body.length > 140 ? `${entry.body.slice(0, 140)}…` : entry.body;
+        if (!window.confirm(`¿Eliminar ${what}?\n\n“${preview}”\n\nEsta acción no se puede deshacer.`)) return;
+        setBusy(true);
+        try {
+            await api.deleteVersiculo(token, libro.id, chapter.capituloNumero, entry.index, entry.raw);
+            toast.success(entry.isFragment ? 'Fragmento eliminado.' : `${refOf(entry.number)} eliminado.`);
+        } catch (e) {
+            toast.error(e.status === 401 ? 'La sesión expiró. Vuelve a entrar e inténtalo otra vez.' : `No se pudo eliminar: ${e.message}`);
+        } finally {
+            await refresh();
+            setBusy(false);
+        }
+    };
+
+    // Un fragmento sin número se agrega al final del versículo anterior y luego se elimina.
+    const mergeEntry = async (entry) => {
+        const previous = analysis.entries[entry.index - 1];
+        if (!previous) return;
+        const label = previous.number ? `${chapter.capituloNumero}:${previous.number}` : 'la entrada anterior';
+        if (!window.confirm(`¿Unir este fragmento al final de ${label}?\n\nEl texto quedará en ese versículo y el fragmento se eliminará.`)) return;
+        setBusy(true);
+        try {
+            const merged = `${previous.raw.trim()} ${entry.body}`;
+            await api.updateVersiculo(token, libro.id, chapter.capituloNumero, previous.index, merged);
+            await api.deleteVersiculo(token, libro.id, chapter.capituloNumero, entry.index, entry.raw);
+            toast.success(`Fragmento unido a ${refOf(previous.number)}.`);
+        } catch (e) {
+            toast.error(`No se pudo completar la unión: ${e.message}. Revisa el capítulo.`);
+        } finally {
+            await refresh();
+            setBusy(false);
+        }
+    };
+
     const saveHeader = (field) => async (value) => {
         if (field === 'nombre') await api.updateNombre(token, libro.id, value);
         else await api.updateAbreviatura(token, libro.id, value);
@@ -109,6 +201,21 @@ const Book = () => {
         updateBook(libro.id, patch);
         toast.success(field === 'nombre' ? 'Nombre del libro guardado.' : 'Abreviatura guardada.');
     };
+
+    const newRow = inserting && chapter && (
+        <NewVerseRow
+            key="nuevo"
+            chapterNumber={chapter.capituloNumero}
+            number={inserting.number}
+            draft={inserting.draft}
+            onNumber={(number) => setInserting((cur) => ({ ...cur, number }))}
+            onDraft={(draft) => setInserting((cur) => ({ ...cur, draft }))}
+            onSave={saveInsert}
+            onCancel={() => setInserting(null)}
+            saving={busy}
+            error={insertError}
+        />
+    );
 
     if (loadError) {
         return (
@@ -221,9 +328,24 @@ const Book = () => {
                             <TriangleAlert size={18} className="mt-0.5 shrink-0 text-gold" aria-hidden="true" />
                             <div className="space-y-1">
                                 {analysis.missing.length > 0 && (
+                                    <>
                                     <p>
                                         <strong>Faltan versículos:</strong> {formatRanges(analysis.missing)}. No existen en los datos de este capítulo.
                                     </p>
+                                    <div className="flex flex-wrap gap-2 pt-1">
+                                        {analysis.missing.slice(0, 12).map((n) => (
+                                            <button
+                                                key={n}
+                                                type="button"
+                                                disabled={busy}
+                                                onClick={() => startInsert(positionFor(n), n)}
+                                                className={`${btn.small} border border-gold/50 bg-surface text-ink hover:bg-gold-soft`}
+                                            >
+                                                <Plus size={14} aria-hidden="true" /> Agregar {chapter.capituloNumero}:{n}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    </>
                                 )}
                                 {analysis.fragments > 0 && (
                                     <p>
@@ -235,10 +357,17 @@ const Book = () => {
                         </div>
                     )}
 
-                    <ol className={`${card} mt-4 divide-y divide-line overflow-hidden`}>
+                    <div className="mt-4 flex justify-end">
+                        <button type="button" onClick={() => startInsert(0, 1)} disabled={busy || !!inserting} className={btn.ghost}>
+                            <ListPlus size={16} aria-hidden="true" /> Insertar al inicio
+                        </button>
+                    </div>
+
+                    <ol className={`${card} mt-2 divide-y divide-line ${inserting ? '' : 'overflow-hidden'}`} aria-busy={busy}>
                         {analysis.entries.map((entry) => (
+                            <React.Fragment key={`${chapter.capituloNumero}-${entry.index}`}>
+                            {inserting?.position === entry.index && newRow}
                             <VerseRow
-                                key={`${chapter.capituloNumero}-${entry.index}`}
                                 entry={entry}
                                 editing={editing?.index === entry.index}
                                 draft={editing?.index === entry.index ? editing.draft : ''}
@@ -250,8 +379,14 @@ const Book = () => {
                                 error={editing?.index === entry.index ? saveError : ''}
                                 highlighted={targetVerse !== null && entry.number === targetVerse && !editing}
                                 justSaved={justSaved === entry.index}
+                                busy={busy}
+                                onInsertAfter={() => startInsert(entry.index + 1, numberAfter(entry.index))}
+                                onDelete={() => deleteEntry(entry)}
+                                onMerge={entry.isFragment && entry.index > 0 ? () => mergeEntry(entry) : undefined}
                             />
+                            </React.Fragment>
                         ))}
+                        {inserting?.position === analysis.entries.length && newRow}
                     </ol>
 
                     <p className="mt-4 flex items-center gap-2 text-xs text-muted">

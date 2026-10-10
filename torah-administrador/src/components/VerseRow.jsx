@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Check, CircleAlert, Pencil } from 'lucide-react';
+import { Check, CircleAlert, Combine, ListPlus, Pencil, Trash2 } from 'lucide-react';
 import { btn } from '../lib/ui';
+import RowMenu from './RowMenu';
 
 const autoSize = (el) => {
     if (!el) return;
@@ -12,7 +13,7 @@ const autoSize = (el) => {
   Un versículo. Clic en el texto o en el lápiz para editarlo en el lugar.
   Guardar: Ctrl/⌘ + Enter. Cancelar: Esc.
 */
-const VerseRow = ({ entry, editing, draft, onStart, onDraft, onCancel, onSave, saving, error, highlighted, justSaved }) => {
+const VerseRow = ({ entry, editing, draft, onStart, onDraft, onCancel, onSave, saving, error, highlighted, justSaved, onInsertAfter, onDelete, onMerge, busy }) => {
     const textareaRef = useRef(null);
     const rowRef = useRef(null);
     const [focusOnOpen, setFocusOnOpen] = useState(false);
@@ -116,6 +117,15 @@ const VerseRow = ({ entry, editing, draft, onStart, onDraft, onCancel, onSave, s
                         >
                             <Pencil size={15} aria-hidden="true" />
                         </button>
+                        <RowMenu
+                            label={label.toLowerCase()}
+                            disabled={busy}
+                            items={[
+                                { label: 'Insertar versículo después', Icon: ListPlus, onSelect: onInsertAfter },
+                                onMerge && { label: 'Unir con el versículo anterior', Icon: Combine, onSelect: onMerge },
+                                { label: entry.isFragment ? 'Eliminar este fragmento' : 'Eliminar versículo', Icon: Trash2, onSelect: onDelete, danger: true },
+                            ]}
+                        />
                     </div>
                 </>
             )}

@@ -66,6 +66,12 @@ export const api = {
     // versiculoNumero es la posición (base 0) dentro del arreglo de versículos del capítulo.
     updateVersiculo: (token, id, capituloNumero, versiculoNumero, versiculo) =>
         request('Libro/actualizar/versiculo', { method: 'PATCH', token, body: { id, capituloNumero, versiculoNumero, versiculo } }),
+    // posicion: dónde queda el nuevo versículo dentro del arreglo (0 = al inicio).
+    insertVersiculo: (token, id, capituloNumero, posicion, versiculo) =>
+        request('Libro/insertar/versiculo', { method: 'POST', token, body: { id, capituloNumero, posicion, versiculo } }),
+    // versiculo: el texto actual en esa posición; si no coincide, la API responde 409 y no borra nada.
+    deleteVersiculo: (token, id, capituloNumero, posicion, versiculo) =>
+        request('Libro/eliminar/versiculo', { method: 'POST', token, body: { id, capituloNumero, posicion, versiculo } }),
 
     listDedicatoria: () => request('Dedicatoria/list'),
     updateDedicatoria: (token, id, contenido) => request('Dedicatoria/actualizar/contenido', { method: 'PATCH', token, body: { id, contenido } }),
