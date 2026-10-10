@@ -24,7 +24,9 @@ export const onUnauthorized = (handler) => {
     unauthorizedHandler = handler;
 };
 
-const request = async (path, { method = 'GET', body, token } = {}) => {
+export const imagenUrl = (id) => (id ? `${API_BASE_URL}Imagen/${id}` : null);
+
+const request = async (path, { method = 'GET', body, form, token } = {}) => {
     let response;
     try {
         response = await fetch(API_BASE_URL + path, {
@@ -34,7 +36,7 @@ const request = async (path, { method = 'GET', body, token } = {}) => {
                 ...(body ? { 'Content-Type': 'application/json' } : {}),
                 ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
-            body: body ? JSON.stringify(body) : undefined,
+            body: form ?? (body ? JSON.stringify(body) : undefined),
         });
     } catch {
         throw new ApiError('No hay conexión con el servidor. Revisa tu internet.', 0);
@@ -80,4 +82,19 @@ export const api = {
     updateGlosario: (token, id, contenido) => request('Glosario/actualizar/contenido', { method: 'PATCH', token, body: { id, contenido } }),
 
     ultimaVersion: () => request('VersionControlador/ultimaversion'),
+
+    listEstudios: (token) => request('Estudio/list', { token }),
+    getEstudio: (token, id) => request(`Estudio/get?id=${encodeURIComponent(id)}`, { token }),
+    crearEstudio: (token, titulo) => request('Estudio/crear', { method: 'POST', token, body: { titulo } }),
+    // estudio debe incluir la revision que se leyó; si otra persona guardó antes, responde 409.
+    guardarEstudio: (token, estudio) => request('Estudio/guardar', { method: 'POST', token, body: estudio }),
+    estadoEstudio: (token, id, publicado) => request('Estudio/estado', { method: 'POST', token, body: { id, publicado } }),
+    eliminarEstudio: (token, id) => request('Estudio/eliminar', { method: 'POST', token, body: { id } }),
+    ordenarEstudios: (token, ids) => request('Estudio/ordenar', { method: 'POST', token, body: { ids } }),
+
+    subirImagen: (token, archivo) => {
+        const form = new FormData();
+        form.append('archivo', archivo);
+        return request('Imagen/subir', { method: 'POST', token, form });
+    },
 };

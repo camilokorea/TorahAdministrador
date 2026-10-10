@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { BookA, BookOpen, ExternalLink, LogOut, Menu, ScrollText, X } from 'lucide-react';
+import { BookA, BookOpen, ExternalLink, GraduationCap, LogOut, Menu, ScrollText, X } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { btn } from '../lib/ui';
 import GoToReference from './GoToReference';
@@ -11,6 +11,7 @@ const PUBLIC_APP_URL = import.meta.env.VITE_PUBLIC_APP_URL || 'https://biblia.co
 
 const NAV = [
     { to: '/', label: 'Libros', Icon: BookOpen, isActive: (p) => p === '/' || p.startsWith('/libro') },
+    { to: '/estudios', label: 'Estudios', Icon: GraduationCap, isActive: (p) => p.startsWith('/estudios') },
     { to: '/dedicatoria', label: 'Dedicatoria', Icon: ScrollText },
     { to: '/glosario', label: 'Glosario', Icon: BookA },
 ];

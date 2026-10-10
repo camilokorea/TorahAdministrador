@@ -10,6 +10,8 @@ import Book from './pages/Book';
 import Dedicatoria from './pages/Dedicatoria';
 import Glosario from './pages/Glosario';
 import NotFound from './pages/NotFound';
+import Estudios from './pages/Estudios';
+import EstudioEditor from './pages/EstudioEditor';
 
 const RequireAuth = () => {
     const { isAuthenticated } = useAuth();
@@ -35,6 +37,8 @@ const router = createBrowserRouter([
                 children: [
                     { index: true, element: <Books /> },
                     { path: 'libro/:id', element: <Book /> },
+                    { path: 'estudios', element: <Estudios /> },
+                    { path: 'estudios/:id', element: <EstudioEditor /> },
                     { path: 'dedicatoria', element: <Dedicatoria /> },
                     { path: 'glosario', element: <Glosario /> },
                     { path: '*', element: <NotFound /> },

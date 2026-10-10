@@ -86,3 +86,42 @@ export const parseReference = (input, books) => {
 
     return best ? { book: best.book, chapter, verse } : null;
 };
+
+// Capítulo completo cuando no se indican versículos ("Sal 23"); al mostrarlo se recorta al último versículo.
+export const WHOLE_CHAPTER = 999;
+
+const RANGE = /^(.*?)\s*(\d+)(?:\s*[:.,]\s*(\d+)(?:\s*[-–]\s*(\d+))?)?\s*$/;
+
+/*
+  "Gén 1:1-3; Sal 23; Jn 3:16" -> { refs: [{ libroId, capitulo, desde, hasta }], errors: ["texto no reconocido"] }
+  Las referencias se separan con ";" o con salto de línea.
+*/
+export const parseReferenceList = (input, books) => {
+    const refs = [];
+    const errors = [];
+
+    for (const part of input.split(/[;\n]/).map((p) => p.trim()).filter(Boolean)) {
+        const m = part.match(RANGE);
+        const found = m && m[1].trim() ? parseReference(`${m[1]} ${m[2]}`, books) : null;
+        if (!m || !found || !found.chapter) {
+            errors.push(part);
+            continue;
+        }
+        const desde = m[3] ? Number(m[3]) : 1;
+        const hasta = m[4] ? Number(m[4]) : m[3] ? desde : WHOLE_CHAPTER;
+        if (hasta < desde) {
+            errors.push(part);
+            continue;
+        }
+        refs.push({ libroId: found.book.id, capitulo: found.chapter, desde, hasta });
+    }
+
+    return { refs, errors };
+};
+
+export const formatReference = (ref, booksById) => {
+    const book = booksById.get(ref.libroId);
+    const name = book ? displayName(book.nombre) : '¿Libro?';
+    if (ref.desde === 1 && ref.hasta >= WHOLE_CHAPTER) return `${name} ${ref.capitulo}`;
+    return `${name} ${ref.capitulo}:${ref.desde}${ref.hasta > ref.desde ? `–${ref.hasta}` : ''}`;
+};
