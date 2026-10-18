@@ -5,7 +5,7 @@ import { analyzeChapter } from './verses';
 // Libros ya pedidos a la API durante la sesión (para no repetir la descarga en cada referencia).
 const cache = new Map();
 
-const loadBook = (id) => {
+export const loadBook = (id) => {
     if (!cache.has(id)) {
         cache.set(
             id,
@@ -19,7 +19,7 @@ const loadBook = (id) => {
 };
 
 // Versículos numerados de un capítulo; los fragmentos sin número se unen al versículo anterior (igual que la app).
-const numberedVerses = (raw) => {
+export const numberedVerses = (raw) => {
     const verses = [];
     for (const entry of analyzeChapter(raw).entries) {
         if (!entry.isFragment) verses.push({ n: entry.number, text: entry.body });
@@ -53,4 +53,26 @@ export const useReferencesText = (refs) => {
     }, [key]);
 
     return state.key === key ? state : { data: null, error: null };
+};
+
+// Hook: capítulos de un libro con sus versículos numerados ([{ n, verses: [{ n, text }] }]), o null mientras carga.
+export const useBookChapters = (bookId) => {
+    const [state, setState] = useState({ id: null, chapters: null, error: null });
+
+    useEffect(() => {
+        if (!bookId) return undefined;
+        let cancelled = false;
+        loadBook(bookId)
+            .then((book) => {
+                if (cancelled) return;
+                const chapters = book.capitulos.map((c) => ({ n: c.capituloNumero, verses: numberedVerses(c.versiculos) }));
+                setState({ id: bookId, chapters, error: null });
+            })
+            .catch((e) => !cancelled && setState({ id: bookId, chapters: null, error: e.message }));
+        return () => {
+            cancelled = true;
+        };
+    }, [bookId]);
+
+    return state.id === bookId ? state : { chapters: null, error: null };
 };

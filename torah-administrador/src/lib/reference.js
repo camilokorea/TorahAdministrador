@@ -50,6 +50,33 @@ const isAbbreviationOf = (key, name) => {
     return i === keyWord.length;
 };
 
+// Qué tan bien coincide un texto ya normalizado con un libro (0 = no coincide).
+const scoreBook = (key, book) => {
+    const name = normalize(book.nombre);
+    const abbr = normalize(book.abreviacion);
+    if (name === key || abbr === key) return 4;
+    if (abbr.startsWith(key)) return 3;
+    if (name.startsWith(key)) return 2;
+    if (key.length >= 3 && name.split(' ').some((w) => w.startsWith(key))) return 1;
+    if (isAbbreviationOf(key, name)) return 0.5;
+    return 0;
+};
+
+// Libros que coinciden, del más probable al menos (a igual puntaje, en el orden de la Biblia).
+const rankBooks = (key, books) =>
+    books
+        .map((book, order) => ({ book, order, score: scoreBook(key, book) }))
+        .filter((x) => x.score > 0)
+        .sort((a, b) => b.score - a.score || a.order - b.order)
+        .map((x) => x.book);
+
+// Sugerencias de libros para lo que se va escribiendo ("gen", "1 co", "jn", "apoc").
+export const suggestBooks = (input, books, limit = 6) => {
+    const key = expandAlias(normalize(input));
+    if (!key) return [];
+    return rankBooks(key, books).slice(0, limit);
+};
+
 const REFERENCE = /^(.*?)\s*(\d+)(?:\s*[:.,\s]\s*(\d+))?\s*$/;
 
 // "Gén 1:3", "1 cor 13", "juan 3 16", "salmos" -> { book, chapter, verse }
@@ -71,20 +98,8 @@ export const parseReference = (input, books) => {
     const key = expandAlias(normalize(bookPart));
     if (!key) return null;
 
-    let best = null;
-    books.forEach((book, order) => {
-        const name = normalize(book.nombre);
-        const abbr = normalize(book.abreviacion);
-        let score = 0;
-        if (name === key || abbr === key) score = 4;
-        else if (abbr.startsWith(key)) score = 3;
-        else if (name.startsWith(key)) score = 2;
-        else if (key.length >= 3 && name.split(' ').some((w) => w.startsWith(key))) score = 1;
-        else if (isAbbreviationOf(key, name)) score = 0.5;
-        if (score && (!best || score > best.score)) best = { score, order, book };
-    });
-
-    return best ? { book: best.book, chapter, verse } : null;
+    const [best] = rankBooks(key, books);
+    return best ? { book: best, chapter, verse } : null;
 };
 
 // Capítulo completo cuando no se indican versículos ("Sal 23"); al mostrarlo se recorta al último versículo.
@@ -124,4 +139,10 @@ export const formatReference = (ref, booksById) => {
     const name = book ? displayName(book.nombre) : '¿Libro?';
     if (ref.desde === 1 && ref.hasta >= WHOLE_CHAPTER) return `${name} ${ref.capitulo}`;
     return `${name} ${ref.capitulo}:${ref.desde}${ref.hasta > ref.desde ? `–${ref.hasta}` : ''}`;
+};
+
+// Una sola referencia completa ("Gén 1:1-3", "Sal 23"), o null si falta el libro o el capítulo.
+export const parseSingleReference = (text, books) => {
+    const { refs, errors } = parseReferenceList(text, books);
+    return refs.length === 1 && errors.length === 0 ? refs[0] : null;
 };
