@@ -7,7 +7,7 @@ import GoToReference from './GoToReference';
 import EnvChip, { EnvStripe } from './EnvChip';
 import SessionDialog from './SessionDialog';
 
-const PUBLIC_APP_URL = import.meta.env.VITE_PUBLIC_APP_URL || 'https://biblia.comunidadmenorah.com';
+const PUBLIC_APP_URL = import.meta.env.VITE_PUBLIC_APP_URL || 'https://biblia.ministeriomenorah.com';
 
 const NAV = [
     { to: '/', label: 'Libros', Icon: BookOpen, isActive: (p) => p === '/' || p.startsWith('/libro') },
