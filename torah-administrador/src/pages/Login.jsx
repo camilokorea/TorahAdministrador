@@ -3,6 +3,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { btn, input } from '../lib/ui';
 import EnvChip, { EnvStripe } from '../components/EnvChip';
+import InstallApp from '../components/InstallApp';
 
 const Login = () => {
     const { isAuthenticated, login } = useAuth();
@@ -85,6 +86,9 @@ const Login = () => {
                         {busy ? 'Entrando…' : 'Iniciar sesión'}
                     </button>
                 </form>
+                <div className="mt-6">
+                    <InstallApp />
+                </div>
             </div>
         </main>
     );
