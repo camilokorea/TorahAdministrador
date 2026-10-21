@@ -6,6 +6,7 @@ import { btn } from '../lib/ui';
 import GoToReference from './GoToReference';
 import EnvChip, { EnvStripe } from './EnvChip';
 import SessionDialog from './SessionDialog';
+import InstallApp from './InstallApp';
 
 const PUBLIC_APP_URL = import.meta.env.VITE_PUBLIC_APP_URL || 'https://biblia.ministeriomenorah.com';
 
@@ -67,6 +68,9 @@ const SidebarContent = ({ onNavigate }) => {
                             Ver app pública
                         </a>
                     </li>
+                    <li>
+                        <InstallApp variant="menu" onDone={onNavigate} />
+                    </li>
                 </ul>
             </nav>
             <div className="mt-auto border-t border-line pt-4">
@@ -118,6 +122,7 @@ const Layout = () => {
 
             <main className="lg:pl-64">
                 <div className="mx-auto max-w-5xl px-4 py-6 sm:px-8 lg:py-10">
+                    <InstallApp />
                     <Outlet />
                 </div>
             </main>
